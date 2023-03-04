@@ -239,7 +239,7 @@ class DataPrepper:
         #print("IMPLEMENT ME: __log_ltr_query_features: Extract log features out of the LTR:EXT response and place in a data frame")
         response = self.opensearch.search(body=log_query, index=self.index_name)
         # Loop over the hits structure returned by running `log_query` and then extract out the features from the response per query_id and doc id.  Also capture and return all query/doc pairs that didn't return features
-        if response and len(response['hits']) > 0:
+        if response and response['hits']['hits'] and len(response['hits']['hits']) > 0:
             hits = response['hits']['hits']
 
             # Your structure should look like the data frame below
@@ -257,7 +257,8 @@ class DataPrepper:
                 feature_results[log_entry.get("name")].append(log_entry.get("value", 0))
                 frame = pd.DataFrame(feature_results)
                 return frame.astype({'doc_id': 'int64', 'query_id': 'int64', 'sku': 'int64'})
-
+        else:
+            no_results[key] = query_doc_ids
         # IMPLEMENT_END
 
     # Can try out normalizing data, but for XGb, you really don't have to since it is just finding splits
