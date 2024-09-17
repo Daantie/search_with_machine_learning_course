@@ -64,6 +64,16 @@ if __name__ == '__main__':
     with multiprocessing.Pool() as p:
         all_labels = tqdm(p.imap(_label_filename, files), total=len(files))
         with open(output_file, 'w') as output:
+            cols = ['category', 'productname']
+            df = pd.DataFrame(columns=cols)
             for label_list in all_labels:
                 for (cat, name) in label_list:
-                    output.write(f'__label__{cat} {name}\n')
+                    new_row = [cat, name]
+                    new_df = pd.DataFrame([new_row], columns=cols)
+                    df = pd.concat([df, new_df], ignore_index=True)
+
+            v = df.category.value_counts()
+            df_min_products = df[df.category.isin(v.index[v.gt(min_products)])]
+
+            for idx, row in df_min_products.iterrows():
+                output.write(f'__label__{row.category} {row.productname}\n')
